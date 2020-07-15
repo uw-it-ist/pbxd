@@ -1,0 +1,14 @@
+.*.swp
+*~
+.DS_Store
+.idea
+.push
+.eggs
+*.egg-info
+__pycache__
+*.pyc
+.pytest_cache
+.coverage
+venv
+.tox
+pbxd_conf

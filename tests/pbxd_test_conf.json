@@ -1,0 +1,6 @@
+{
+    "pbx_name": "n1",
+    "connection_command": "sh -c \"printf '\nPassword: \nTerminal Type (4410, VT220): [513]\nTerminator received but no command active\nt\n' && cat -\"",
+    "pbx_username": "test",
+    "pbx_password": "none"
+}

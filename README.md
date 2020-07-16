@@ -212,5 +212,4 @@ time everything changes. It is still a useful tool and the Avaya Communication
 Manager still supports the OSSI protocol so pbxd has been rewritten in Python
 with a JSON API.
 
-You can see a description of the original version here:
-http://tools.cac.washington.edu/2010/04/avaya-pbx-admin-web-service.html
+You can see a description of the [original version here](http://tools.cac.washington.edu/2010/04/avaya-pbx-admin-web-service.html).

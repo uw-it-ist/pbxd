@@ -37,11 +37,8 @@ services:
         server {
           listen 80;
 
-          location /v2/uw01 {
-              proxy_pass http://app:8000/v2/uw01;
-          }
-          location /v3/uw01 {
-              proxy_pass http://app:8000/v3/uw01;
+          location / {
+              proxy_pass http://app:8000/;
           }
         }
     command: /bin/sh -c "echo $$NGINX_CONFIG > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"

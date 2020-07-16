@@ -5,7 +5,7 @@ pbxd is a web service that provides an API to an Avaya PBX.
 It logs in to the SAT terminal of the PBX, then runs commands on the PBX and
 returns the results to the client.
 
-The number of gunicorn workers determines how many simultaneus logins are made
+The number of gunicorn workers determines how many simultaneous logins are made
 to the PBX system.
 
 
@@ -128,7 +128,7 @@ The `<command>` element has 3 attributes:
 2. cmdType: ossi or vt220
 3. cmd: the command to run on the pbx
 
-The `<command>` element may have multiple child `<field>` elements. If the field has a text node then that text will be use for change commands.
+The `<command>` element may have multiple child `<field>` elements. If the field has a text node then that text will be used for change commands.
 
 `<field>` elements have 1 attribute:
 1. fid: the OSSI field id
@@ -201,7 +201,7 @@ Example script:
 ## Background
 
 The development of pbxd originated with a Perl module developed to support
-scripts for automating management of the Lucent G3r PBX in the earl 2000's.
+scripts for automating management of the Lucent G3r PBX in the early 2000's.
 As more scripts were written and run there was duplicate code and multiple
 scripts accessing the PBX simultaneously. There were also more PBX systems at
 remote sites. Pbxd was created to share connections to a PBX, and enable
@@ -209,8 +209,8 @@ multiple clients like web browsers to get bits of information from the PBX.
 
 Written in Perl as a CGI script it worked well enough for many years but given
 time everything changes. It is still a useful tool and the Avaya Communication
-Manager still supports the OSSI protocol so pbxd has been rewritting in Python
+Manager still supports the OSSI protocol so pbxd has been rewritten in Python
 with a JSON API.
 
-You can see a dscription of the original version here:
+You can see a description of the original version here:
 http://tools.cac.washington.edu/2010/04/avaya-pbx-admin-web-service.html

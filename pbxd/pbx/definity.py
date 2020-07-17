@@ -231,6 +231,16 @@ class Terminal(object):
 
         Note: there have been cases of duplicate field ids from the PBX so the
         data_list is available without ids if needed.
+
+        The OSSI lines:
+        The first character in each OSSI line identifies its content.
+        c: the command being run
+        f: a tab separated list of field ids
+        d: a tab separated list of data values for each of the fields
+           a single space is used to clear a field
+        e: an error message, two error codes followed by the message
+        n: a line with a single n identifies the start of a new item in a list
+        t: a line with a single t identifies end of the ossi command output
         """
         # switch back to the original ossi OSSI terminal type
         self._select_termtype('ossi4')

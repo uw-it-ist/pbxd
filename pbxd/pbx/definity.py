@@ -424,5 +424,7 @@ class Terminal(object):
         """
         if termtype == 'vt220':
             return self.vt220_command(command)
-        else:
+        elif termtype == 'ossi':
             return self.ossi_command(command, fields=fields, debug=debug)
+        else:
+            return {"error": "Unknown termtype. Must be ossi or vt220."}

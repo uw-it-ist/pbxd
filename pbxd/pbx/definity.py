@@ -79,6 +79,20 @@ import logging
 import pexpect
 import pyte
 import re
+from collections import namedtuple
+
+
+TerminalDriver = namedtuple('TerminalDriver',
+                            ['name', 'newterm', 'disconnect', 'prompt'])
+
+
+ossi4 = TerminalDriver(name='ossi4', newterm=['c newterm', 't'],
+                       disconnect=['c logoff', 't'], prompt=r't[\r\n]+')
+
+
+vt220 = TerminalDriver(name='vt220', newterm=['newterm'],
+                       disconnect=[b'\x1b[3~', 'logoff'],
+                       prompt=r'\x1b\[2;1H.*\x1b\[KCommand: ')
 
 
 class Terminal(object):
@@ -118,7 +132,7 @@ class Terminal(object):
             self.logger.debug('Sending pbx_password')
             self.session.sendline(self.pbx_password)
 
-        self._select_termtype('ossi4')
+        self._select_termtype(ossi4)
 
     def disconnect(self):
         """
@@ -126,12 +140,8 @@ class Terminal(object):
         """
         self.logger.info('Disonnecting from pbx')
         if self.session is not None:
-            if self.connected_termtype == 'vt220':
-                self.session.send(b'\x1b[3~')  # VT220 cancel
-                self.session.sendline('logoff')
-            else:
-                self.session.sendline('c logoff')
-                self.session.sendline('t')
+            for line in self.connected_termtype.disconnect:
+                self.session.sendline(line)
 
             index = self.session.expect(
                 [
@@ -165,14 +175,11 @@ class Terminal(object):
             self.logger.error('dead session: {}'.format(self.session.before))
             self.reconnect()
 
-        if termtype == self.connected_termtype:
+        if termtype.name == self.connected_termtype.name:
             return
 
-        if self.connected_termtype == 'vt220':
-            self.session.sendline('newterm')
-        elif self.connected_termtype == 'ossi4':
-            self.session.sendline('c newterm')
-            self.session.sendline('t')
+        for line in self.connected_termtype.newterm:
+            self.session.sendline(line)
 
         # Terminal Type (513, 715, 4410, 4425, VT220, NTT, W2KTT, SUNT): [513]
         index = self.session.expect(
@@ -194,10 +201,7 @@ class Terminal(object):
             self.session.sendline(termtype)
 
         # verify and consume the prompt
-        if termtype == 'vt220':  # consume the vt220 prompt
-            self.session.expect([r'\x1b\[2;1H.*\x1b\[KCommand: '])
-        elif termtype == 'ossi4':  # consume the ossi t prompt
-            self.session.expect([r't[\r\n]+'])
+        self.session.expect(termtype.prompt)
         if index == 0:  # TIMEOUT
             self.logger.error('Timeout on command prompt verify:\n{}'.format(self.session.before))
             raise Exception('Timeout on command prompt verify:\n{}'.format(self.session.before))
@@ -243,7 +247,7 @@ class Terminal(object):
         t: a line with a single t identifies end of the ossi command output
         """
         # switch back to the original ossi OSSI terminal type
-        self._select_termtype('ossi4')
+        self._select_termtype(ossi4)
 
         # Send OSSI command
         self.logger.info('command: {}'.format(command))
@@ -336,7 +340,7 @@ class Terminal(object):
         """
         run a command in the vt220 terminal and return the PBX screens
         """
-        self._select_termtype('vt220')
+        self._select_termtype(vt220)
         screens = []
         response_error = None
 

@@ -195,9 +195,16 @@ class Terminal(object):
 
         # verify and consume the prompt
         if termtype == 'vt220':  # consume the vt220 prompt
-            self.session.expect([r'\x1b\[2;1H.*\x1b\[KCommand: '])
+            expected_prompt = r'\x1b\[2;1H.*\x1b\[KCommand: '
         elif termtype == 'ossi4':  # consume the ossi t prompt
-            self.session.expect([r't[\r\n]+'])
+            expected_prompt = r't[\r\n]+'
+        index = self.session.expect(
+            [
+                pexpect.TIMEOUT,
+                pexpect.EOF,
+                expected_prompt,
+            ]
+        )
         if index == 0:  # TIMEOUT
             self.logger.error('Timeout on command prompt verify:\n{}'.format(self.session.before))
             raise Exception('Timeout on command prompt verify:\n{}'.format(self.session.before))

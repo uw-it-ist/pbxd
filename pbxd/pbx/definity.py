@@ -79,9 +79,14 @@ import logging
 import pexpect
 import pyte
 import re
+from enum import Enum
 
 
 class Terminal(object):
+    """
+    The pbx terminal object provides a connection to a PBX and methods to run
+    commands using the vt220 or ossi terminal types.
+    """
     def __init__(self, connection_command, pbx_username, pbx_password, pbx_command_timeout=300):
         self.logger = logging.getLogger(__name__)
         self.connection_command = connection_command
@@ -90,6 +95,13 @@ class Terminal(object):
         self.session = None
         self.connected_termtype = None
         self.pbx_command_timeout = int(pbx_command_timeout)
+
+    class Termtype(Enum):
+        """
+        Restrict the terminal types to these values.
+        """
+        vt220 = 'vt220'
+        ossi = 'ossi4'
 
     def connect(self):
         """
@@ -118,7 +130,7 @@ class Terminal(object):
             self.logger.debug('Sending pbx_password')
             self.session.sendline(self.pbx_password)
 
-        self._select_termtype('ossi4')
+        self._select_termtype(self.Termtype.ossi)
 
     def disconnect(self):
         """
@@ -126,7 +138,7 @@ class Terminal(object):
         """
         self.logger.info('Disonnecting from pbx')
         if self.session is not None:
-            if self.connected_termtype == 'vt220':
+            if self.connected_termtype == self.Termtype.vt220:
                 self.session.send(b'\x1b[3~')  # VT220 cancel
                 self.session.sendline('logoff')
             else:
@@ -153,13 +165,16 @@ class Terminal(object):
         self.logger.info('Connection closed')
 
     def reconnect(self):
+        """
+        Disconnect and then connect.
+        """
         self.logger.warning('Reconnecting...')
         self.disconnect()
         self.connect()
 
     def _select_termtype(self, termtype):
         """
-        Switch between the ossi4 and vt220 termtypes.
+        Switch between the ossi and vt220 termtypes.
         """
         if not self.session.isalive():
             self.logger.error('dead session: {}'.format(self.session.before))
@@ -168,9 +183,9 @@ class Terminal(object):
         if termtype == self.connected_termtype:
             return
 
-        if self.connected_termtype == 'vt220':
+        if self.connected_termtype == self.Termtype.vt220:
             self.session.sendline('newterm')
-        elif self.connected_termtype == 'ossi4':
+        elif self.connected_termtype == self.Termtype.ossi:
             self.session.sendline('c newterm')
             self.session.sendline('t')
 
@@ -190,13 +205,13 @@ class Terminal(object):
             error_msg = self.session.before.decode('utf-8').strip().split('\n')[0]  # first output line
             raise Exception('Connection failed with EOF at termtype: {}'.format(error_msg))
         elif index == 2:  # Terminal Type
-            self.logger.debug('selecting termtype {} from {}'.format(termtype, self.session.after))
-            self.session.sendline(termtype)
+            self.logger.debug('selecting termtype {} from {}'.format(termtype.value, self.session.after))
+            self.session.sendline(termtype.value)
 
         # verify and consume the prompt
-        if termtype == 'vt220':  # consume the vt220 prompt
+        if termtype == self.Termtype.vt220:  # consume the vt220 prompt
             expected_prompt = r'\x1b\[2;1H.*\x1b\[KCommand: '
-        elif termtype == 'ossi4':  # consume the ossi t prompt
+        elif termtype == self.Termtype.ossi:  # consume the ossi t prompt
             expected_prompt = r't[\r\n]+'
         index = self.session.expect(
             [
@@ -250,7 +265,7 @@ class Terminal(object):
         t: a line with a single t identifies end of the ossi command output
         """
         # switch back to the original ossi OSSI terminal type
-        self._select_termtype('ossi4')
+        self._select_termtype(self.Termtype.ossi)
 
         # Send OSSI command
         self.logger.info('command: {}'.format(command))
@@ -341,9 +356,9 @@ class Terminal(object):
 
     def vt220_command(self, command):
         """
-        run a command in the vt220 terminal and return the PBX screens
+        Run a command in the vt220 terminal and return the PBX screens.
         """
-        self._select_termtype('vt220')
+        self._select_termtype(self.Termtype.vt220)
         screens = []
         response_error = None
 
@@ -422,9 +437,10 @@ class Terminal(object):
         """
         run a command with the requested termtype
         """
-        if termtype == 'vt220':
+
+        if termtype == self.Termtype.vt220.name:
             return self.vt220_command(command)
-        elif termtype == 'ossi':
+        elif termtype == self.Termtype.ossi.name:
             return self.ossi_command(command, fields=fields, debug=debug)
         else:
             return {"error": "Unknown termtype. Must be ossi or vt220."}

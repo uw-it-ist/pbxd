@@ -61,22 +61,15 @@ def test_pbx_disconnect():
     assert pbx.connected_termtype is None
 
 
-def assert_in_v3_response(termtype, expected_texts, v3_post, expect_stream):
-    pbx.connected_termtype = termtype  # use a known starting value
-    pbx.pbx_command_timeout = 2
+def test_pbx_termtype_select():
+    expect_stream = "sh -c \"stty -echo && printf 'Terminal Type (test): [test]\nt\n' && cat -\""
     pbx.session = pexpect.spawn(expect_stream, timeout=2)
-    app.testing = True
-    with app.test_client() as c:
-        resp = c.post('/v3/{}'.format(pbx_name), json=v3_post)
-        data = json.loads(resp.data)
-        assert isinstance(data, dict) is True
-        for txt in expected_texts:
-            assert txt in resp.data.decode('utf-8')
-    pbx.session.close()
+    pbx._select_termtype(pbx.Termtype.ossi)
+    assert True
 
 
 def assert_in_v2_response(termtype, expected_texts, v2_post, expect_stream):
-    pbx.connected_termtype = termtype  # use a known starting value
+    pbx.connected_termtype = pbx.Termtype(termtype)  # use a known starting value
     pbx.pbx_command_timeout = 2
     pbx.session = pexpect.spawn(expect_stream, timeout=2)
     app.testing = True
@@ -87,11 +80,18 @@ def assert_in_v2_response(termtype, expected_texts, v2_post, expect_stream):
     pbx.session.close()
 
 
-def test_pbx_termtype_select():
-    expect_stream = "sh -c \"stty -echo && printf 'Terminal Type (test): [test]\nt\n' && cat -\""
+def assert_in_v3_response(termtype, expected_texts, v3_post, expect_stream):
+    pbx.connected_termtype = pbx.Termtype(termtype)  # use a known starting value
+    pbx.pbx_command_timeout = 2
     pbx.session = pexpect.spawn(expect_stream, timeout=2)
-    pbx._select_termtype('ossi4')
-    assert True
+    app.testing = True
+    with app.test_client() as c:
+        resp = c.post('/v3/{}'.format(pbx_name), json=v3_post)
+        data = json.loads(resp.data)
+        assert isinstance(data, dict) is True
+        for txt in expected_texts:
+            assert txt in resp.data.decode('utf-8')
+    pbx.session.close()
 
 
 def test_ossi_display_1_field():

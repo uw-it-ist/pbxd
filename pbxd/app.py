@@ -46,19 +46,16 @@ def load():
         definity_logger.handlers = gunicorn_logger.handlers
         definity_logger.setLevel(gunicorn_logger.level)
 
-    # set APPLICATION_ROOT to the URL path where the app is served
-    app.config['APPLICATION_ROOT'] = os.environ.get('APPLICATION_ROOT', '/')
+    # set the env variable APPLICATION_ROOT to the URL path where the app is served
+    app.config["APPLICATION_ROOT"] = os.environ.get("APPLICATION_ROOT", "/")
     logger.debug('using app root {}'.format(app.config['APPLICATION_ROOT']))
-
-    # set PBX_NAME for views to validate requests
-    app.config['PBX_NAME'] = os.environ['PBX_NAME']
-    logger.debug('PBX_NAME {}'.format(app.config['PBX_NAME']))
+    prefix = app.config["APPLICATION_ROOT"]
+    if app.config["APPLICATION_ROOT"] == "/":
+        prefix = ""
 
     # connect to the PBX when the worker starts
     try:
-        logger.info('Logging in to pbx {}'.format(app.config['PBX_NAME']))
         pbx.connect()
-        logger.info('connected')
     except Exception as e:
         if 'Too many logins' in str(e):
             logger.error(e)
@@ -69,13 +66,13 @@ def load():
 
     # register the blueprint routes
     from .main import main
-    app.register_blueprint(main, url_prefix='/')
+    app.register_blueprint(main, url_prefix='{}/'.format(prefix))
 
     from .v2 import v2
-    app.register_blueprint(v2, url_prefix='/v2')
+    app.register_blueprint(v2, url_prefix='{}/v2/'.format(prefix))
 
     from .v3 import v3
-    app.register_blueprint(v3, url_prefix='/v3')
+    app.register_blueprint(v3, url_prefix='{}/v3/'.format(prefix))
 
     # log the URL paths that are registered
     for url in app.url_map.iter_rules():

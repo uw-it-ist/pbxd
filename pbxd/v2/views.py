@@ -42,8 +42,8 @@ def _convert_v3_response_to_v2(pbx_name, termtype, command, v3_response):
     return xml
 
 
-@v2.route("/<pbx_path_name>", methods=["POST"])
-def legacy_xml_post(pbx_path_name):
+@v2.route("/", methods=["POST"])
+def legacy_xml_post():
     """
     pbxName: selects the PBX
     cmdType: must be vt220 or ossi
@@ -52,8 +52,7 @@ def legacy_xml_post(pbx_path_name):
             only required to change a field on a change command.
     """
 
-    # parse the v2 command xml
-    try:
+    try:  # to parse the v2 command xml
         logger.debug(request.form['request'])
         dom = xmltodict.parse(request.form['request'])
         pbx_name = dom['command']['@pbxName']  # pbx name
@@ -73,10 +72,6 @@ def legacy_xml_post(pbx_path_name):
                     fields[id] = val
     except Exception:
         abort(400, description="Bad request")
-
-    if pbx_name != app.config["PBX_NAME"]:
-        logger.error('connected to the wrong PBX: {} != {}'.format(pbx_name, app.config["PBX_NAME"]))
-        abort(500)
 
     v3_response = pbx.send_pbx_command(termtype, command, fields, debug=False)
     xml = _convert_v3_response_to_v2(pbx_name, termtype, command, v3_response)

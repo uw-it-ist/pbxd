@@ -2,11 +2,10 @@ from flask import json
 import os
 import pexpect
 
-os.environ['PBXD_INTERNAL_V3_URL'] = 'http://localhost:5000/v3'
 pbx_name = 'n1'
+os.environ['APPLICATION_ROOT'] = '/{}'.format(pbx_name)
 os.environ['PBXD_CONF'] = 'tests/pbxd_test_conf.json'
-os.environ['PBX_COMMAND_TIMEOUT'] = '30'
-os.environ['PBX_NAME'] = pbx_name
+os.environ['PBX_COMMAND_TIMEOUT'] = '5'
 import pbxd.app  # noqa: E402
 from pbxd.app import pbx  # noqa: E402
 
@@ -16,42 +15,22 @@ app = pbxd.app.load()
 
 def test_health_check():
     with app.test_client() as c:
-        rv = c.get('/healthz')
+        rv = c.get('/{}/healthz'.format(pbx_name))
         assert rv.status_code == 200
         assert b'ossi_objects' in rv.data
-
-
-def test_index_page_404():
-    with app.test_client() as c:
-        rv = c.get('/')
-        assert rv.status_code == 404
-
-
-def test_v3_pbx_name_check():
-    app.testing = True
-    with app.test_client() as c:
-        rv = c.post('/v3/wrong-pbx', data='')
-        assert rv.status_code == 500
-
-
-def test_v2_pbx_name_check():
-    app.testing = True
-    with app.test_client() as c:
-        rv = c.post('/v2/wrong-pbx', data={"request": '<command pbxName="wrong-pbx" cmdType="ossi" cmd="display time"/>'})
-        assert rv.status_code == 500
 
 
 def test_bad_v3_request():
     app.testing = True
     with app.test_client() as c:
-        rv = c.post('/v3/{}'.format(pbx_name), data='')
+        rv = c.post('/{}/v3/'.format(pbx_name), data='')
         assert rv.status_code == 400
 
 
 def test_bad_v2_request():
     app.testing = True
     with app.test_client() as c:
-        rv = c.post('/v2/{}'.format(pbx_name), data='')
+        rv = c.post('/{}/v2/'.format(pbx_name), data='')
         assert rv.status_code == 400
 
 
@@ -74,7 +53,7 @@ def assert_in_v2_response(termtype, expected_texts, v2_post, expect_stream):
     pbx.session = pexpect.spawn(expect_stream, timeout=2)
     app.testing = True
     with app.test_client() as c:
-        resp = c.post('/v2/{}'.format(pbx_name), data={"request": v2_post})
+        resp = c.post('/{}/v2/'.format(pbx_name), data={"request": v2_post})
         for txt in expected_texts:
             assert txt in resp.data.decode('utf-8')
     pbx.session.close()
@@ -86,7 +65,7 @@ def assert_in_v3_response(termtype, expected_texts, v3_post, expect_stream):
     pbx.session = pexpect.spawn(expect_stream, timeout=2)
     app.testing = True
     with app.test_client() as c:
-        resp = c.post('/v3/{}'.format(pbx_name), json=v3_post)
+        resp = c.post('/{}/v3/'.format(pbx_name), json=v3_post)
         data = json.loads(resp.data)
         assert isinstance(data, dict) is True
         for txt in expected_texts:

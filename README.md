@@ -13,7 +13,6 @@ to the PBX system.
 
 Environment variables:
 
-    PBX_NAME=uw01
     PBX_COMMAND_TIMEOUT=300
     PBXD_CONF=pbxd_conf/pbxd_uw01_conf.json
 
@@ -51,7 +50,7 @@ requirements.txt file and help ensure predictable builds.
     pip install -r requirements.txt
     pip install -e .
 
-    PBX_NAME=uw01 \
+    APPLICATION_ROOT=/uw01 \
     PBX_COMMAND_TIMEOUT=300 \
     PBXD_CONF=pbxd_conf/pbxd_uw01_conf.json \
     gunicorn "pbxd.app:load()" -b localhost:8000 --access-logfile - --log-level INFO --reload
@@ -98,19 +97,19 @@ Examples:
 
     curl -X POST -H "Content-Type: application/json" \
     -d '{"termtype": "ossi","command": "display time"}' \
-    http://localhost:8000/v3/uw01
+    http://localhost:8000/uw01/v3/
 
     curl -X POST -H "Content-Type: application/json" \
     -d '{"termtype": "ossi",
         "command": "display station 12345",
         "fields": {"8003ff00": "12345 Test", "8005ff00": ""}}' \
-    http://localhost:8000/v3/uw01
+    http://localhost:8000/uw01/v3/
 
     curl -X POST -H "Content-Type: application/json" \
     -d '{"termtype": "ossi",
         "command": "list extension count 10",
         "fields": {"0001ff00": "", "0002ff00": ""}}' \
-    http://localhost:8000/v3/uw01
+    http://localhost:8000/uw01/v3/
 
 The v3 API will return a JSON object with one or more of these keys:
 - ossi_objects: array with each OSSI object returned by the PBX
@@ -137,20 +136,20 @@ The `<command>` element may have multiple child `<field>` elements. If the field
 Examples:
 
     curl -d 'request=<command pbxName="uw01" cmdType="ossi" cmd="display time"/>' \
-    http://localhost:8000/v2/uw01
+    http://localhost:8000/uw01/v2/
 
 
     curl -d 'request=<command pbxName="uw01" cmdType="ossi" cmd="display station 12345">
        <field fid="8005ff00"/>
        <field fid="8003ff00">12345 Test</field>
     </command>' \
-    http://localhost:8000/v2/uw01
+    http://localhost:8000/uw01/v2/
 
     curl -d 'request=<command pbxName="uw01" cmdType="ossi" cmd="list extension count 10">
        <field fid="0001ff00"/>
        <field fid="0002ff00"/>
     </command>' \
-    http://localhost:8000/v2/uw01
+    http://localhost:8000/uw01/v2/
 
 The v2 API will return a XML document with the `<command>` element and one or more of these child elements:
 - `<ossi_object>`

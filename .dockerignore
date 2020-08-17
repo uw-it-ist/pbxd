@@ -1,0 +1,11 @@
+.eggs
+**/*.egg-info
+**/__pycache__
+**/*.pyc
+.git
+.pytest_cache
+.tox
+.coverage
+venv
+pbxd_conf
+.github

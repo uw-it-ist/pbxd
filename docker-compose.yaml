@@ -1,0 +1,44 @@
+# Docker Compose will let you run your application locally with multiple containers.
+# This should let you emulate the production system on your local workstation.
+#
+# To run locally:
+#   docker-compose build
+#   ssh -L 5022:<ip of pbx>:5022 ssh-jumphost
+#   docker-compose up --abort-on-container-exit
+
+version: '3'
+services:
+
+  # This is your app and it will be similar to YAML for the MCI K8s Deployment
+  app:
+    build: .
+    ports:
+      - "8003:8000"
+    environment:
+      APPLICATION_ROOT: /
+      PBX_NAME: uw01
+      PBX_COMMAND_TIMEOUT: 600
+      PBXD_CONF: /home/toolop/pbxd_conf/pbxd_uw01_conf.json
+
+    volumes:
+      - ./pbxd:/home/toolop/app/pbxd  # for development mount the local app in the container
+      - ./pbxd_conf:/home/toolop/pbxd_conf
+    command: -b :8000 --workers 1 --access-logfile - --log-level DEBUG --reload
+
+
+  # This emulates your app in the production nginx ingress
+  nginx:
+    image: nginx
+    ports:
+      - "8000:80"
+    environment:
+      # in production you need to restrict access in your nginx config
+      NGINX_CONFIG: |
+        server {
+          listen 80;
+
+          location / {
+              proxy_pass http://app:8000/;
+          }
+        }
+    command: /bin/sh -c "echo $$NGINX_CONFIG > /etc/nginx/conf.d/default.conf && exec nginx -g 'daemon off;'"

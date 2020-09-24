@@ -275,7 +275,7 @@ class Terminal(object):
         if fields is not None and len(fields) > 0:
             self.logger.debug('fields: {}'.format(fields))
             ids = ('\t'.join(sorted(fields))).strip()
-            data = ('\t'.join([fields[k] for k in sorted(fields)])).strip()
+            data = ('\t'.join([fields[k] for k in sorted(fields)]))
             self.logger.debug('send: f{}'.format(ids))
             self.session.sendline('f{}'.format(ids))  # fields
             self.logger.debug('send: d{}'.format(data))

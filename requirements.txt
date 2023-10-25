@@ -14,7 +14,7 @@ pexpect==4.8.0            # via pbxd (setup.py)
 ptyprocess==0.6.0         # via pexpect
 pyte==0.8.0               # via pbxd (setup.py)
 wcwidth==0.2.5            # via pyte
-werkzeug==1.0.1           # via flask
+werkzeug==3.0.1           # via flask
 xmltodict==0.12.0         # via pbxd (setup.py)
 
 # The following packages are considered to be unsafe in a requirements file:

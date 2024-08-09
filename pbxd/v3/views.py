@@ -8,12 +8,13 @@ from ..app import pbx
 def pbx_command():
     try:  # to parse the requested v3 command
         data = request.get_json(silent=True)
-        logger.debug(request.data)
+        logger.info(request.data)
         termtype = data['termtype']
         command = data['command']
         fields = data.get('fields')
         debug = data.get('debug', False)
-    except Exception:
+    except Exception as e:
+        logger.error(f'Error in v3, failed to process request with exception: {str(e)}')
         abort(400, description='Bad request')
 
     return pbx.send_pbx_command(termtype, command, fields=fields, debug=debug)
